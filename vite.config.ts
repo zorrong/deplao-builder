@@ -64,6 +64,8 @@ const config: UserConfig = {
     // Polyfill process.env cho renderer (browser không có process)
     'process.env.NODE_ENV':    JSON.stringify(isProd ? 'production' : 'development'),
     'process.env.BUILD_TARGET': JSON.stringify(process.env.BUILD_TARGET ?? (isProd ? 'production' : 'development')),
+    'process.platform': JSON.stringify('win32'),
+    'process.env': {},
   },
   plugins: [
     react(),
