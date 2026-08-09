@@ -38,7 +38,6 @@ export function registerLoginIpc(mainWindow: BrowserWindow | null) {
     // ─── Abort QR (khi user muốn refresh thủ công) ────────────────────────
     ipcMain.handle('login:qr:abort', async (_event, { tempId }) => {
         try {
-            const ZaloLoginHelper = require('../../src/utils/ZaloLoginHelper').default;
             ZaloLoginHelper.abortQR(tempId);
             return { success: true };
         } catch (error: any) {
