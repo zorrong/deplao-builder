@@ -1,47 +1,18 @@
 import { socketInvoke, socketSend, socketOn, socketOff } from './socketClient';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import type { TelegramForumTopicContext } from '../src/models/telegram';
-
-const getTauriWindow = () => {
-  try {
-    return getCurrentWindow();
-  } catch {
-    return null;
-  }
-};
+import type { TelegramForumTopicContext } from '../../models/telegram';
 
 // Expose typed API to renderer
 window.electronAPI = {
   // ─── Platform info ──────────────────────────────────────────────
-  platform: typeof process !== 'undefined' ? process.platform : (navigator.userAgent.includes('Mac') ? 'darwin' : navigator.userAgent.includes('Linux') ? 'linux' : 'win32'),
+  platform: typeof process !== 'undefined' ? process.platform : 'win32',  // 'darwin' | 'win32' | 'linux'
 
   // ─── Window Controls ─────────────────────────────────────────────
   window: {
-    minimize: async () => {
-      const win = getTauriWindow();
-      if (win) await win.minimize();
-      else socketSend('window:minimize');
-    },
-    maximize: async () => {
-      const win = getTauriWindow();
-      if (win) await win.toggleMaximize();
-      else socketSend('window:maximize');
-    },
-    close: async () => {
-      const win = getTauriWindow();
-      if (win) await win.close();
-      else socketSend('window:close');
-    },
-    quit: async () => {
-      const win = getTauriWindow();
-      if (win) await win.close();
-      else socketSend('window:quit');
-    },
-    isMaximized: async () => {
-      const win = getTauriWindow();
-      if (win) return await win.isMaximized();
-      return socketInvoke('window:isMaximized');
-    },
+    minimize: () => socketSend('window:minimize'),
+    maximize: () => socketSend('window:maximize'),
+    close: () => socketSend('window:close'),
+    quit: () => socketSend('window:quit'),
+    isMaximized: () => socketInvoke('window:isMaximized').catch(() => false),
   },
 
   // ─── Shell ───────────────────────────────────────────────────────
@@ -63,6 +34,7 @@ window.electronAPI = {
     loginCookies: (imei: string, cookies: string, userAgent: string) =>
       socketInvoke('login:cookies', { imei, cookies, userAgent }),
     loginAuth: (authJson: string, proxyId?: number | null) => socketInvoke('login:auth', { authJson, proxyId }),
+    openZaloWebviewLogin: (proxyId?: number | null) => socketInvoke('login:openZaloWebview', proxyId),
     connectAccount: (auth: any) => socketInvoke('login:connect', { auth }),
     disconnectAccount: (zaloId: string) => socketInvoke('login:disconnect', { zaloId }),
     disconnectAll: () => socketInvoke('login:disconnectAll'),
@@ -248,6 +220,8 @@ window.electronAPI = {
     getThreadLocalLabels: (params: any) => socketInvoke('db:getThreadLocalLabels', params),
     setLocalLabelActive: (params: any) => socketInvoke('db:setLocalLabelActive', params),
     setLocalLabelOrder: (params: any) => socketInvoke('db:setLocalLabelOrder', params),
+    getNotifSettings: (zaloId: string) => socketInvoke('db:getNotifSettings', { zaloId }),
+    setNotifSettings: (params: any) => socketInvoke('db:setNotifSettings', params),
 
     setContactFlags: (params: any) => socketInvoke('db:setContactFlags', params),
     getContactsWithFlags: (params: any) => socketInvoke('db:getContactsWithFlags', params),
@@ -622,6 +596,7 @@ window.electronAPI = {
     searchGifs:           (params: any) => socketInvoke('telegramUser:searchGifs', params),
     sendSticker:          (params: any) => socketInvoke('telegramUser:sendSticker', params),
     sendGif:              (params: any) => socketInvoke('telegramUser:sendGif', params),
+    downloadSticker:      (params: any) => socketInvoke('telegramUser:downloadSticker', params),
   },
 
   // ─── ERP ─────────────────────────────────────────────────────────
@@ -733,121 +708,12 @@ window.electronAPI = {
     deleteFolder:(id: number) => socketInvoke('library:deleteFolder', id),
   },
   on: (channel: string, callback: (...args: any[]) => void) => {
-    const validChannels = [
-      'event:message',
-      'event:connected',
-      'event:disconnected',
-      'event:reaction',
-      'event:telegramReaction',
-      'event:messageEdited',
-      'event:messagesDeleted',
-      'event:userPresence',
-      'event:telegramEntityHydrated',
-      'event:forumTopicsChanged',
-      'event:groupMemberAvatar',
-      'event:friendRequest',
-      'event:friendAccepted',
-      'event:groupEvent',
-      'event:groupInfoUpdate',
-      'event:undo',
-      'event:delete',
-      'event:reminder',
-      'event:localPath',
-      'event:listenerDead',
-      'event:pinsUpdated',
-      'event:typing',
-      'event:seen',
-      'qr:update',
-      'update:available',
-      'update:progress',
-      'update:downloaded',
-      'update:error',
-      'app:openThread',
-      'app:windowFocus',
-      'app:drawBadge',
-      'crm:queueUpdate',
-      'crm:queueStatus',
-      'crm:campaignDone',
-      'workflow:executed',
-      'db:copyProgress',
-      'integration:webhook',
-      'integration:payment',
-      'tunnel:changed',
-      'tunnel:onChange',
-      'workflow:webhookRegistered',
-      'relay:employeeListUpdate',
-      'relay:messageSentByEmployee',
-      'relay:tunnelStatusUpdate',
-      'workspace:switched',
-      'workspace:connectionStatus',
-      'workspace:initialState',
-      'workspace:accountAccessUpdate',
-      'workspace:permissionUpdate',
-      'workspace:syncComplete',
-      'employee:modeChanged',
-      // ─── Facebook events ─────────────────────────────────────────────
-      'fb:onMessage',
-      'fb:onReaction',
-      'fb:onEdit',
-      'fb:onUnsend',
-      'fb:onDisconnect',
-      'fb:onReconnect',
-      'fb:onConnectionStatus',
-      // ─── ERP events ──────────────────────────────────────────────────
-      'erp:event:taskCreated',
-      'erp:event:taskUpdated',
-      'erp:event:taskDeleted',
-      'erp:event:commentAdded',
-      'erp:event:projectCreated',
-      'erp:event:projectUpdated',
-      'erp:event:projectDeleted',
-      'erp:event:calendarEventCreated',
-      'erp:event:calendarEventUpdated',
-      'erp:event:calendarEventDeleted',
-      'erp:event:noteCreated',
-      'erp:event:noteUpdated',
-      'erp:event:noteDeleted',
-      'erp:event:notification',
-      'erp:event:reminder',
-      'erp:event:leaveCreated',
-      'erp:event:leaveDecided',
-      'erp:event:attendanceUpdated',
-      // ─── CRM / Settings real-time sync ──────────────────────────────
-      'db:localLabelChanged',
-      'db:localLabelThreadChanged',
-      'db:pinnedMessageChanged',
-      'db:localQuickMessageChanged',
-      'crm:campaignChanged',
-      'crm:noteChanged',
-      'db:pinnedConversationChanged',
-      'db:contactFlagsChanged',
-      'db:contactAliasChanged',
-      'db:unreadChanged',
-      'db:conversationDeleted',
-      'db:contactProfileUpdated',
-      'crm:tagChanged',
-      'event:friendRequestSent',
-      'event:friendRequestRemoved',
-      'event:pollVote',
-      'erp:event:noteShared',
-      'erp:event:departmentUpdated',
-      'erp:event:employeeProfileUpdated',
-      'erp:event:employeeProfileDeleted',
-      // ─── Library events ──────────────────────────────────────────
-      'library:itemAdded',
-      'library:itemUpdated',
-      'library:itemDeleted',
-    ];
-    if (validChannels.includes(channel)) {
-      const subscription = (_event: any, ...args: any[]) => callback(...args);
-      ipcRenderer.on(channel, subscription);
-      return () => ipcRenderer.removeListener(channel, subscription);
-    }
-    return () => {};
+    socketOn(channel, callback);
+    return () => socketOff(channel, callback);
   },
 
   removeAllListeners: (channel: string) => {
-    ipcRenderer.removeAllListeners(channel);
+    socketOff(channel);
   },
 
   // ─── Proxy ───────────────────────────────────────────────────────────────

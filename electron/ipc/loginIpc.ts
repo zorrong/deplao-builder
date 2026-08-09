@@ -46,6 +46,16 @@ export function registerLoginIpc(mainWindow: BrowserWindow | null) {
         }
     });
 
+    // ─── Đăng nhập qua Zalo Webview ───────────────────────────────────────
+    ipcMain.handle('login:openZaloWebview', async (_event, proxyId) => {
+        try {
+            console.log('[loginIpc] Open Zalo Webview request received with proxy:', proxyId);
+            return { success: false, error: 'Phát hiện cần hoàn tất Zalo Web. Vui lòng hoàn thành đăng nhập trên cửa sổ và chọn dán Cookie nếu cần.' };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
     // ─── Đăng nhập bằng JSON auth (1 ô paste) ────────────────────────────
     // Format: { "imei": "...", "cookies": "...", "userAgent": "..." }
     ipcMain.handle('login:auth', async (_event, { authJson, proxyId }) => {

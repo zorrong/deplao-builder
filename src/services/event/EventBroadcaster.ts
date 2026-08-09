@@ -10,6 +10,13 @@ export function registerGroupCacheInvalidator(fn: (zaloId: string, groupId: stri
     _invalidateGroupCacheFn = fn;
 }
 
+type SidecarBroadcasterFn = (channel: string, data: any) => void;
+let _sidecarBroadcaster: SidecarBroadcasterFn | null = null;
+
+export function setSidecarBroadcaster(fn: SidecarBroadcasterFn) {
+    _sidecarBroadcaster = fn;
+}
+
 /**
  * EventBroadcaster - Thay thế ApiService webhook bằng Electron IPC events
  * Broadcast Zalo events từ main process → renderer process
@@ -138,10 +145,16 @@ class EventBroadcaster {
                 try { hook(data); } catch {}
             }
         }
+        const safeData = EventBroadcaster.sanitizeBigInt(data);
         if (this.window && !this.window.isDestroyed()) {
-            // Sanitize BigInt trước khi gửi qua IPC
-            const safeData = EventBroadcaster.sanitizeBigInt(data);
             this.window.webContents.send(channel, safeData);
+        }
+        if (_sidecarBroadcaster) {
+            try {
+                _sidecarBroadcaster(channel, safeData);
+            } catch (err: any) {
+                Logger.warn(`[EventBroadcaster] Sidecar broadcast failed for ${channel}: ${err.message}`);
+            }
         }
     }
 
@@ -153,6 +166,13 @@ class EventBroadcaster {
     public static sendDirect(channel: string, data: any): void {
         if (this.window && !this.window.isDestroyed()) {
             this.window.webContents.send(channel, data);
+        }
+        if (_sidecarBroadcaster) {
+            try {
+                _sidecarBroadcaster(channel, data);
+            } catch (err: any) {
+                Logger.warn(`[EventBroadcaster] Sidecar broadcastDirect failed for ${channel}: ${err.message}`);
+            }
         }
     }
 

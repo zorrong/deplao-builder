@@ -1,4 +1,5 @@
 import { Server, Socket } from 'socket.io';
+import { setSidecarBroadcaster } from '../src/services/event/EventBroadcaster';
 
 type Handler = (event: any, ...args: any[]) => Promise<any> | any;
 type Listener = (event: any, ...args: any[]) => void;
@@ -10,6 +11,19 @@ class IpcMainMock {
 
   init(io: Server) {
     this.io = io;
+
+    // Đăng ký broadcaster callback tới EventBroadcaster
+    setSidecarBroadcaster((channel: string, data: any) => {
+      this.sendToAll(channel, data);
+    });
+
+    // Đăng ký các handler mặc định cho Window
+    this.handle('window:isMaximized', () => false);
+    this.handle('window:minimize', () => ({ success: true }));
+    this.handle('window:maximize', () => ({ success: true }));
+    this.handle('window:close', () => ({ success: true }));
+    this.handle('window:quit', () => ({ success: true }));
+
     io.on('connection', (socket: Socket) => {
       // 1. Lắng nghe các lệnh invoke() (request/response)
       socket.on('ipc:invoke', async (data: { channel: string; args: any[] }, callback) => {
