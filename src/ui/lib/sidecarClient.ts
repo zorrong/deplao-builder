@@ -1,8 +1,9 @@
-import { socketInvoke, socketSend, socketOn, socketOff } from './socketClient';
+import { socketInvoke, socketSend, socketOn, socketOff, isElectron } from './socketClient';
 import type { TelegramForumTopicContext } from '../../models/telegram';
 
-// Expose typed API to renderer
-window.electronAPI = {
+// Expose typed API to renderer ONLY if not in Electron natively
+if (!isElectron) {
+  (window as any).electronAPI = {
   // ─── Platform info ──────────────────────────────────────────────
   platform: typeof process !== 'undefined' ? process.platform : 'win32',  // 'darwin' | 'win32' | 'linux'
 
@@ -727,3 +728,4 @@ window.electronAPI = {
     test:          (proxy: any)                    => socketInvoke('proxy:test', { proxy }),
   },
 };
+}
