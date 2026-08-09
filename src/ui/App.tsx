@@ -185,12 +185,13 @@ export default function App() {
 
   // ─── Lock screen: check status on mount ─────────────────────────────────
   useEffect(() => {
+    if (!ipc.lockScreen) return;
     ipc.lockScreen.status().then(res => {
       if (res.success && res.enabled) {
         setLockEnabled(true);
         setIsLocked(true);
       }
-    });
+    }).catch(err => console.warn('[App] lockScreen.status error', err));
   }, []);
 
   // ─── Early init RestQueryService (employee mode) — trước workspace:switched ──
