@@ -11,6 +11,8 @@ import { AlertIcon, BookIcon, CheckIcon, ClockIcon, CloseIcon, KeyIcon, LockIcon
 import TelegramBotLoginStep from './TelegramBotLoginStep';
 import PhoneLoginTab from './PhoneLoginTab';
 
+import { ZaloWebviewLoginTab } from './ZaloWebviewLoginTab';
+
 interface AddAccountModalProps {
   onClose: () => void;
 }
@@ -53,7 +55,7 @@ export default function AddAccountModal({ onClose }: AddAccountModalProps) {
 
   const [step, setStep] = useState<Step>(getInitialStep());
   const [channel, setChannel] = useState<Channel>(initialCh || 'zalo');
-  const [tab, setTab] = useState<'qr' | 'cookie'>('qr');
+  const [tab, setTab] = useState<'qr' | 'cookie' | 'webview'>('qr');
   const [fbTab, setFbTab] = useState<'account' | 'cookie'>('account');
   const [selectedProxyId, setSelectedProxyId] = useState<number | null>(null);
   const [proxies, setProxies] = useState<any[]>([]);
@@ -219,26 +221,24 @@ export default function AddAccountModal({ onClose }: AddAccountModalProps) {
             )}
             {/* Zalo sub-tabs */}
             <div className="flex border-b border-gray-700">
-              {(['qr', 'cookie'] as const).map((t) => (
+              {(['qr', 'cookie', 'webview'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  className={`flex-1 py-3 text-xs font-medium transition-colors ${
                     tab === t
                       ? 'text-blue-400 border-b-2 border-blue-400'
                       : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
-                  {t === 'qr' ? 'Quét mã QR' : 'Cookies / IMEI'}
+                  {t === 'qr' ? 'Quét mã QR' : t === 'cookie' ? 'Cookies / IMEI' : 'Zalo Web (Dự phòng)'}
                 </button>
               ))}
             </div>
             <div className="p-6">
-              {tab === 'qr' ? (
-                <QRLoginTab onSuccess={onClose} proxyId={selectedProxyId} />
-              ) : (
-                <CookieLoginTab onSuccess={onClose} proxyId={selectedProxyId} />
-              )}
+              {tab === 'qr' && <QRLoginTab onSuccess={onClose} proxyId={selectedProxyId} />}
+              {tab === 'cookie' && <CookieLoginTab onSuccess={onClose} proxyId={selectedProxyId} />}
+              {tab === 'webview' && <ZaloWebviewLoginTab onSuccess={onClose} proxyId={selectedProxyId} />}
             </div>
           </>
         )}

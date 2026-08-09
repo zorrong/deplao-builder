@@ -28,6 +28,7 @@ declare global {
         loginQRAbort: (tempId: string) => Promise<any>;
         loginCookies: (imei: string, cookies: string, userAgent: string) => Promise<any>;
         loginAuth: (authJson: string, proxyId?: number | null) => Promise<any>;
+        openZaloWebviewLogin: (proxyId?: number | null) => Promise<{ success: boolean; zaloId?: string; error?: string }>;
         connectAccount: (auth: any) => Promise<any>;
         disconnectAccount: (zaloId: string) => Promise<any>;
         disconnectAll: () => Promise<any>;
@@ -354,8 +355,10 @@ declare global {
       on: (channel: string, callback: (...args: any[]) => void) => () => void;
       removeAllListeners: (channel: string) => void;
       update: {
+        check:    () => void;
         download: () => void;
         install:  () => void;
+        rendererReady?: () => void;
       };
       workflow: {
         list: () => Promise<{ success: boolean; workflows: any[]; error?: string }>;

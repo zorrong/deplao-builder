@@ -38,9 +38,18 @@ export function registerLoginIpc(mainWindow: BrowserWindow | null) {
     // ─── Abort QR (khi user muốn refresh thủ công) ────────────────────────
     ipcMain.handle('login:qr:abort', async (_event, { tempId }) => {
         try {
-            const ZaloLoginHelper = require('../../src/utils/ZaloLoginHelper').default;
             ZaloLoginHelper.abortQR(tempId);
             return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    // ─── Đăng nhập qua Zalo Webview ───────────────────────────────────────
+    ipcMain.handle('login:openZaloWebview', async (_event, proxyId) => {
+        try {
+            console.log('[loginIpc] Open Zalo Webview request received with proxy:', proxyId);
+            return { success: false, error: 'Phát hiện cần hoàn tất Zalo Web. Vui lòng hoàn thành đăng nhập trên cửa sổ và chọn dán Cookie nếu cần.' };
         } catch (error: any) {
             return { success: false, error: error.message };
         }

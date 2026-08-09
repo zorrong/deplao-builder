@@ -9,7 +9,10 @@
     "build:bridge-e2ee": "node scripts/build-bridge-e2ee.js",
     "predev": "npm run build:bridge-e2ee || echo 'WARN: E2EE bridge build failed, app will work without E2EE'",
     "dev": "npm run build:electron && concurrently -n VITE,TSC,ELECTRON -c cyan,magenta,yellow \"vite\" \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"wait-on http://localhost:27799 && cross-env NODE_ENV=development electron dist-electron/electron/main.js\"",
-    "build:electron": "tsc -p tsconfig.electron.json",
+    "dev:ui": "vite",
+    "build:ui": "vite build",
+    "dev:tauri": "tauri dev",
+    "build:tauri": "tauri build",
     "build:renderer": "vite build",
     "rebuild:native": "node scripts/rebuild-native.js",
     "production": "npm run build:bridge-e2ee && tsc -p tsconfig.electron.prod.json && node scripts/strip-console.js && npm run build:renderer && npm run rebuild:native && electron-builder --publish never"
@@ -18,6 +21,7 @@
   "homepage": "https://deplaoapp.com",
   "license": "MIT",
   "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
     "axios": "^1.7.8",
     "axios-cookiejar-support": "^5.0.3",
     "bcryptjs": "^3.0.3",

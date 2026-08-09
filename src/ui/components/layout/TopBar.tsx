@@ -209,7 +209,7 @@ export default function TopBar() {
   // Update: now using badge next to version + popup (see below)
 
   useEffect(() => {
-    ipc.window?.isMaximized().then(setIsMaximized);
+    ipc.window?.isMaximized().then(setIsMaximized).catch(() => {});
   }, []);
 
   // Check lock screen status

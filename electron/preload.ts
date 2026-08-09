@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     loginCookies: (imei: string, cookies: string, userAgent: string) =>
       ipcRenderer.invoke('login:cookies', { imei, cookies, userAgent }),
     loginAuth: (authJson: string, proxyId?: number | null) => ipcRenderer.invoke('login:auth', { authJson, proxyId }),
+    openZaloWebviewLogin: (proxyId?: number | null) => ipcRenderer.invoke('login:openZaloWebview', proxyId),
     connectAccount: (auth: any) => ipcRenderer.invoke('login:connect', { auth }),
     disconnectAccount: (zaloId: string) => ipcRenderer.invoke('login:disconnect', { zaloId }),
     disconnectAll: () => ipcRenderer.invoke('login:disconnectAll'),
@@ -219,6 +220,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getThreadLocalLabels: (params: any) => ipcRenderer.invoke('db:getThreadLocalLabels', params),
     setLocalLabelActive: (params: any) => ipcRenderer.invoke('db:setLocalLabelActive', params),
     setLocalLabelOrder: (params: any) => ipcRenderer.invoke('db:setLocalLabelOrder', params),
+    getNotifSettings: (zaloId: string) => ipcRenderer.invoke('db:getNotifSettings', { zaloId }),
+    setNotifSettings: (params: any) => ipcRenderer.invoke('db:setNotifSettings', params),
 
     setContactFlags: (params: any) => ipcRenderer.invoke('db:setContactFlags', params),
     getContactsWithFlags: (params: any) => ipcRenderer.invoke('db:getContactsWithFlags', params),
@@ -593,6 +596,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     searchGifs:           (params: any) => ipcRenderer.invoke('telegramUser:searchGifs', params),
     sendSticker:          (params: any) => ipcRenderer.invoke('telegramUser:sendSticker', params),
     sendGif:              (params: any) => ipcRenderer.invoke('telegramUser:sendGif', params),
+    downloadSticker:      (params: any) => ipcRenderer.invoke('telegramUser:downloadSticker', params),
   },
 
   // ─── ERP ─────────────────────────────────────────────────────────
